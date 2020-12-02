@@ -62,13 +62,16 @@ bookmarksRouter
 
     const id = uuid();
 
-    res.json({
+    const newObj = {
       id,
       title,
       url,
       desc,
       rating
-    })
+    }
+
+    bookmarks.push(newObj);
+    res.json(bookmarks);
   })
 ;
 
@@ -96,11 +99,13 @@ bookmarksRouter
       logger.error(`Bookmark not found.`)
         return res
           .status(404)
-          .send('Bookmark not found')
+          .send('Bookmark not found.')
         ;
     }
 
-    return res.send(`Deleted bookmark: ${id}`);
+    const index = bookmarks.findIndex(bookmark => bookmark.id === id);
+    bookmarks.splice(index, 1);
+    return res.json(bookmarks);
   })
 ;
 
