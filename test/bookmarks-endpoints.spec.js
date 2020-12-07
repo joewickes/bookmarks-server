@@ -3,7 +3,7 @@ const knex = require('knex');
 const app = require('../src/app');
 const { makeBookmarksArray } = require('./bookmarks.fixtures');
 
-describe.only('Bookmarks Endpoints', function() {
+describe('Bookmarks Endpoints', function() {
   let db;
 
   before('make knex instance', () => {
@@ -84,7 +84,7 @@ describe.only('Bookmarks Endpoints', function() {
 
   });
 
-  describe.only('POST /bookmarks', () => {
+  describe('POST /bookmarks', () => {
     // Retries based on issues with response timing in ms
     it(`creates an bookmark, responding with 201 and the new bookmark`, function() {
       this.retries(3)

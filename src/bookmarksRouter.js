@@ -1,5 +1,6 @@
 const express = require('express');
 const { v4: uuid } = require('uuid');
+const xss = require('xss');
 
 const validation = require('./validation');
 const logger = require('./logger');
@@ -18,7 +19,15 @@ bookmarksRouter
     const knexInstance = req.app.get('db');
     BookmarksService.getAllBookmarks(knexInstance)
       .then(bookmarks => {
-        res.json(bookmarks)
+        res.json(bookmarks.map(bookmark => {
+          return {
+            id: bookmark.id,
+            title: xss(bookmark.title),
+            url: xss(bookmark.url),
+            description: xss(bookmark.description),
+            rating: xss(bookmark.rating)
+          }
+        }))
       })
       .catch(next)
   })
@@ -42,7 +51,13 @@ bookmarksRouter
         res
           .status(201)
           .location(`/bookmarks/${bookmark.id}`)
-          .json(bookmark)
+          .json({
+            id: bookmark.id,
+            title: xss(bookmark.title),
+            url: xss(bookmark.url),
+            description: xss(bookmark.description),
+            rating: xss(bookmark.rating)
+          })
       })
       .catch(next)
   })
@@ -60,23 +75,17 @@ bookmarksRouter
             error: { message: `Bookmark doesn't exist` }
           });
         }
-        res.json(bookmark)
+
+        res.json({
+          id: bookmark.id,
+          title: xss(bookmark.title),
+          url: xss(bookmark.url),
+          description: xss(bookmark.description),
+          rating: xss(bookmark.rating)
+        })
       })
       .catch(next)
     ;
-
-    // const { bookmark_id } = req.params;
-    // const bookmark = bookmarks.find(bookmark => bookmark.id === bookmark_id);
-
-    // if (!bookmark) {
-    //   logger.error(`Bookmark not found.`)
-    //       return res
-    //         .status(404)
-    //         .send('Bookmark not found')
-    //       ;
-    // }
-
-    // return res.json(bookmark);
   })
   .delete((req, res) => {
     const { id } = req.params;
@@ -92,7 +101,13 @@ bookmarksRouter
 
     const index = bookmarks.findIndex(bookmark => bookmark.id === id);
     bookmarks.splice(index, 1);
-    return res.json(bookmarks);
+    return res.json({
+      id: bookmark.id,
+      title: xss(bookmark.title),
+      url: xss(bookmark.url),
+      description: xss(bookmark.description),
+      rating: xss(bookmark.rating)
+    })
   })
 ;
 
