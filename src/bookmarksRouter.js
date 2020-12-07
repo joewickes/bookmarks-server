@@ -35,6 +35,14 @@ bookmarksRouter
     const { title, url, description = null, rating } = req.body
     const newBookmark = { title, url, description, rating };
 
+    // Rating validation
+    const vRating = parseInt(rating);
+    if (vRating !== 1 && vRating !== 2 && vRating !== 3 && vRating !== 4 && vRating !== 5) {
+      return res.status(400).json({
+        error: { message: 'Must submit valid rating' }
+      })
+    }
+
     for (const [key, value] of Object.entries(newBookmark)) {
       if (value == null) {
         return res.status(400).json({
@@ -76,7 +84,7 @@ bookmarksRouter
           });
         }
 
-        res.json({
+        return res.json({
           id: bookmark.id,
           title: xss(bookmark.title),
           url: xss(bookmark.url),
@@ -87,27 +95,22 @@ bookmarksRouter
       .catch(next)
     ;
   })
-  .delete((req, res) => {
-    const { id } = req.params;
-    const bookmark = bookmarks.find(bookmark => bookmark.id === id);
+  .delete((req, res, next) => {
+    BookmarksService.getById(req.app.get('db'), req.params.bookmark_id)
+    .then(bookmark => {
+      if (!bookmark) {
+        return res.status(404).json({
+          error: { message: `Bookmark doesn't exist` }
+        });
+      }
 
-    if (!bookmark) {
-      logger.error(`Bookmark not found.`)
-        return res
-          .status(404)
-          .send('Bookmark not found.')
-        ;
-    }
+      BookmarksService.deleteBookmark(req.app.get('db'), req.params.bookmark_id)
+        .then(() => {
+          res.status(204).end();
+        })
+        .catch(next)
 
-    const index = bookmarks.findIndex(bookmark => bookmark.id === id);
-    bookmarks.splice(index, 1);
-    return res.json({
-      id: bookmark.id,
-      title: xss(bookmark.title),
-      url: xss(bookmark.url),
-      description: xss(bookmark.description),
-      rating: xss(bookmark.rating)
-    })
+      })
   })
 ;
 

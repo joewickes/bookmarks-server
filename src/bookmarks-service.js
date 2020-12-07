@@ -17,6 +17,12 @@ const BookmarksService = {
       })
     ;
   },
+  deleteBookmark(knex, id) {
+    return knex('bookmarks_table')
+      .where('id', id)
+      .delete()
+    ;
+  },
 };
 
 module.exports = BookmarksService;
