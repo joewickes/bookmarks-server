@@ -84,4 +84,37 @@ describe.only('Bookmarks Endpoints', function() {
 
   });
 
+  describe.only('POST /bookmarks', () => {
+    // Retries based on issues with response timing in ms
+    it(`creates an bookmark, responding with 201 and the new bookmark`, function() {
+      this.retries(3)
+    ;
+
+    const newBookmark = {
+      title: 'Test new bookmark',
+      url: 'https://www.google.com',
+      description: 'Google bookmark test',
+      rating: '4' 
+    }
+
+    return supertest(app)
+        .post('/bookmarks')
+        .send(newBookmark)
+        .expect(res => {
+          expect(res.body.title).to.eql(newBookmark.title)
+          expect(res.body.url).to.eql(newBookmark.url)
+          expect(res.body.description).to.eql(newBookmark.description)
+          expect(res.body.rating).to.eql(newBookmark.rating)
+          expect(res.body).to.have.property('id')
+          expect(res.headers.location).to.eql(`/bookmarks/${res.body.id}`)
+        })
+        .then(postRes =>
+          supertest(app)
+            .get(`/bookmarks/${postRes.body.id}`)
+            .expect(postRes.body)
+        )
+      ;
+    });
+  });
+
 });

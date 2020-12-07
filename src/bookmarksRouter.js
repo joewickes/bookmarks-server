@@ -7,6 +7,7 @@ const BookmarksService = require('./bookmarks-service');
 
 const bookmarksRouter = express.Router();
 const bodyParser = express.json();
+const jsonParser = express.json();
 
 // bookmarksRouter.use(validation);
 bookmarksRouter.use(bodyParser);
@@ -20,54 +21,31 @@ bookmarksRouter
         res.json(bookmarks)
       })
       .catch(next)
-  ;
+  })
+  .post(jsonParser, (req, res, next) => {
+    const { title, url, description = null, rating } = req.body
+    const newBookmark = { title, url, description, rating };
 
-    // const knexInstance = req.app.get('db');
-    // BookmarksService.getAllBookmarks(knexInstance)
-    //   .then(bookmarks => {
-    //     if (!bookmarks) {
-    //       logger.error(`Bookmarks not found.`);
-    //       return res
-    //         .status(404)
-    //         .send('Bookmarks not found')
-    //       ;
-    //     }
-  
-    //     return res.json(bookmarks || '/BOOKMARKS');
-      });
-  // })
-  // .post((req, res) => {
-  //   const { title, url, desc = '', rating = null } = req.body;
+    for (const [key, value] of Object.entries(newBookmark)) {
+      if (value == null) {
+        return res.status(400).json({
+          error: { message: `Missing '${key}' in request body` }
+        })
+      }
+    }
 
-  //   if (!title) {
-  //     logger.error(`Title required, but not found`)
-  //     return res
-  //       .status(404)
-  //       .send('Title required')
-  //     ;
-  //   }
-
-  //   if (!url) {
-  //     logger.error(`Url required, but not found.`)
-  //     return res
-  //       .status(404)
-  //       .send('Url not found')
-  //     ;
-  //   }
-
-  //   const id = uuid();
-
-  //   const newObj = {
-  //     id,
-  //     title,
-  //     url,
-  //     desc,
-  //     rating
-  //   }
-
-  //   bookmarks.push(newObj);
-  //   res.json(bookmarks);
-  // })
+    BookmarksService.insertBookmark(
+      req.app.get('db'),
+      newBookmark
+    )
+      .then(bookmark => {
+        res
+          .status(201)
+          .location(`/bookmarks/${bookmark.id}`)
+          .json(bookmark)
+      })
+      .catch(next)
+  })
 ;
 
 bookmarksRouter
