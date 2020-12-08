@@ -14,7 +14,7 @@ const jsonParser = express.json();
 bookmarksRouter.use(bodyParser);
 
 bookmarksRouter
-  .route('/bookmarks')
+  .route('/api/bookmarks')
   .get((req, res, next) => {
     const knexInstance = req.app.get('db');
     BookmarksService.getAllBookmarks(knexInstance)
@@ -58,7 +58,7 @@ bookmarksRouter
       .then(bookmark => {
         res
           .status(201)
-          .location(`/bookmarks/${bookmark.id}`)
+          .location(`/api/bookmarks/${bookmark.id}`)
           .json({
             id: bookmark.id,
             title: xss(bookmark.title),
@@ -72,10 +72,11 @@ bookmarksRouter
 ;
 
 bookmarksRouter
-  .route('/bookmarks/:bookmark_id')
+  .route('/api/bookmarks/:bookmark_id')
   .get((req, res, next) => {
 
     const knexInstance = req.app.get('db');
+
     BookmarksService.getById(knexInstance, req.params.bookmark_id)
       .then(bookmark => {
         if (!bookmark) {
@@ -95,6 +96,37 @@ bookmarksRouter
       .catch(next)
     ;
   })
+  .patch((req, res, next) => {
+    BookmarksService.getById(req.app.get('db'), req.params.bookmark_id)
+      .then(bookmark => {
+        if (!bookmark) {
+          return res.status(404).json({
+            error: { message: `Bookmark doesn't exist` }
+          });
+        }
+
+        const  groups = ['title', 'url', 'description', 'rating'];
+        let newObj = {};
+
+        groups.map(group => {
+          if (req.body[group]) {
+            return newObj[group] = req.body[group];
+          }
+        })
+
+        if (Object.keys(newObj).length === 0) {
+          return res.status(400).json({
+            error: { message: 'No updates given' }
+          })
+        }
+
+        BookmarksService.updateBookmark(req.app.get('db'), req.params.bookmark_id, newObj)
+          .then(() => {
+            return res.status(204).end();
+          });
+
+      })
+  })
   .delete((req, res, next) => {
     BookmarksService.getById(req.app.get('db'), req.params.bookmark_id)
     .then(bookmark => {
@@ -106,7 +138,7 @@ bookmarksRouter
 
       BookmarksService.deleteBookmark(req.app.get('db'), req.params.bookmark_id)
         .then(() => {
-          res.status(204).end();
+          return res.status(204).end();
         })
         .catch(next)
 

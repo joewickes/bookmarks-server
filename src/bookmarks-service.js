@@ -7,6 +7,11 @@ const BookmarksService = {
       .where('id', id).first()
     ;
   },
+  updateBookmark(knex, id, newItemStuff) {
+    return knex('bookmarks_table')
+      .where({ id })
+      .update(newItemStuff);
+  },
   insertBookmark(knex, newBookmark) {
     return knex
       .insert(newBookmark)
